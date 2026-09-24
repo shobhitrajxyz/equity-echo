@@ -6,6 +6,8 @@ import { SidePanel } from './components/SidePanel';
 import { MOCK_STOCKS } from './data/mockData';
 import { ChartType, Timeframe, IndicatorConfig, DrawingToolType, StockData, DrawingItem, Watchlist } from './types/chart';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 const DEFAULT_WATCHLISTS: Watchlist[] = [
   {
     id: 'w1',
@@ -41,7 +43,6 @@ export function App() {
 
   const [activeWatchlistId, setActiveWatchlistId] = useState<string>(() => watchlists[0]?.id || 'w1');
 
-  // Save watchlists to localStorage on changes
   useEffect(() => {
     try {
       localStorage.setItem('equity_echo_watchlists', JSON.stringify(watchlists));
@@ -66,10 +67,10 @@ export function App() {
   const [drawings, setDrawings] = useState<DrawingItem[]>([]);
   const [hoverData, setHoverData] = useState<{ candle: any; ema20: number | null; sma50: number | null; rsi: number | null } | null>(null);
 
-  // Fetch real-time OHLCV data from FastAPI Backend
+  // Fetch real-time OHLCV data from API Backend
   useEffect(() => {
     setIsLoading(true);
-    fetch(`http://localhost:8000/api/charts/ohlcv/${encodeURIComponent(selectedSymbol)}?tf=${timeframe}`)
+    fetch(`${API_BASE}/api/charts/ohlcv/${encodeURIComponent(selectedSymbol)}?tf=${timeframe}`)
       .then(res => res.json())
       .then(data => {
         if (data.prices && data.prices.length > 0) {
@@ -102,7 +103,6 @@ export function App() {
       });
   }, [selectedSymbol, timeframe]);
 
-  // Unlimited Watchlist Handlers
   const handleCreateWatchlist = (name: string) => {
     const newList: Watchlist = {
       id: 'w_' + Math.random().toString(36).substring(7),
@@ -150,7 +150,6 @@ export function App() {
 
   return (
     <div className={`w-screen h-screen flex flex-col ${isDarkMode ? 'dark bg-[#12161f]' : 'bg-slate-100'}`}>
-      {/* Top Header */}
       <ChartHeader
         currentStock={currentStock}
         allStocks={allFetchedStocks}
@@ -174,9 +173,7 @@ export function App() {
         isLoading={isLoading}
       />
 
-      {/* Main Workspace */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Drawing Sidebar */}
         <DrawingSidebar
           activeTool={activeDrawingTool}
           onSelectTool={setActiveDrawingTool}
@@ -188,7 +185,6 @@ export function App() {
           isDarkMode={isDarkMode}
         />
 
-        {/* Central Canvas Chart */}
         <main className="flex-1 h-full relative">
           <StockCanvasChart
             symbol={currentStock.symbol}
@@ -208,7 +204,6 @@ export function App() {
           />
         </main>
 
-        {/* Right Unlimited Watchlists & Events Panel */}
         <SidePanel
           currentStock={currentStock}
           allStocks={allFetchedStocks}

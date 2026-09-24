@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { StockSuggestion, Watchlist } from '../types/chart';
 import { Search, Loader2, ArrowRight, Plus, Check } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 interface SearchAutocompleteProps {
   onSelectStock: (symbol: string) => void;
   watchlists: Watchlist[];
@@ -34,7 +36,7 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
 
     setIsLoading(true);
     const timer = setTimeout(() => {
-      fetch(`http://localhost:8000/api/search?q=${encodeURIComponent(query)}`)
+      fetch(`${API_BASE}/api/search?q=${encodeURIComponent(query)}`)
         .then(res => res.json())
         .then(data => {
           setSuggestions(data.suggestions || []);
@@ -91,7 +93,6 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
 
   return (
     <div ref={containerRef} className="relative z-50">
-      {/* Search Bar */}
       <div
         className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border text-sm transition-all ${
           isOpen
@@ -119,7 +120,6 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
         {isLoading && <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin shrink-0" />}
       </div>
 
-      {/* Autocomplete Dropdown */}
       {isOpen && (query.trim().length > 0 || suggestions.length > 0) && (
         <div
           className={`absolute top-full left-0 mt-1 w-[380px] md:w-[450px] rounded-xl shadow-2xl border z-50 overflow-hidden py-1 ${
@@ -184,7 +184,6 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
                     </button>
 
                     <div className="flex items-center space-x-2 shrink-0">
-                      {/* Add to Watchlist Button */}
                       <button
                         onClick={e => {
                           e.stopPropagation();

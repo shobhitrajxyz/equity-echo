@@ -32,7 +32,7 @@ POPULAR_INDIAN_STOCKS = [
     {"symbol": "NSE:ITC", "ticker": "ITC.NS", "name": "ITC Ltd", "exchange": "NSE", "sector": "FMCG", "aliases": ["ITC"]},
     {"symbol": "NSE:TATAMOTORS", "ticker": "TATAMOTORS.NS", "name": "Tata Motors Ltd", "exchange": "NSE", "sector": "Auto", "aliases": ["TATA MOTORS", "TMCV"]},
     {"symbol": "NSE:TATASTEEL", "ticker": "TATASTEEL.NS", "name": "Tata Steel Ltd", "exchange": "NSE", "sector": "Metals", "aliases": ["TATA STEEL"]},
-    {"symbol": "NSE:ZOMATO", "ticker": "ZOMATO.NS", "name": "Eternal Ltd (Zomato)", "exchange": "NSE", "sector": "Consumer Services", "aliases": ["ETERNAL", "ZOMATO"]},
+    {"symbol": "NSE:ETERNAL", "ticker": "ETERNAL.NS", "name": "Eternal Ltd (Zomato)", "exchange": "NSE", "sector": "Consumer Services", "aliases": ["ETERNAL", "ZOMATO", "NSE:ZOMATO"]},
     {"symbol": "NSE:SUZLON", "ticker": "SUZLON.NS", "name": "Suzlon Energy Ltd", "exchange": "NSE", "sector": "Renewable Energy", "aliases": ["SUZLON"]},
     {"symbol": "NSE:YESBANK", "ticker": "YESBANK.NS", "name": "Yes Bank Ltd", "exchange": "NSE", "sector": "Banking", "aliases": ["YES", "YESBANK"]},
     {"symbol": "NSE:PCI:AGROCHEMDOM", "ticker": "AGROCHEM.NS", "name": "Agro Chem Domestic Custom Index", "exchange": "NSE", "sector": "Chemicals", "aliases": ["AGRO", "PCI:AGROCHEMDOM"]},
@@ -46,9 +46,10 @@ POPULAR_INDIAN_STOCKS = [
 ]
 
 SYMBOL_ALIASES = {
-    "ETERNAL": "ZOMATO.NS",
-    "NSE:ETERNAL": "ZOMATO.NS",
-    "ZOMATO": "ZOMATO.NS",
+    "ZOMATO": "ETERNAL.NS",
+    "NSE:ZOMATO": "ETERNAL.NS",
+    "ETERNAL": "ETERNAL.NS",
+    "NSE:ETERNAL": "ETERNAL.NS",
     "RELIANCE": "RELIANCE.NS",
     "TCS": "TCS.NS",
     "INFY": "INFY.NS",
@@ -133,7 +134,6 @@ def get_ohlcv(symbol: str, tf: str = "1D"):
     if cache_key in CACHE_OHLCV and (now - CACHE_OHLCV[cache_key]["timestamp"] < CACHE_TTL):
         return CACHE_OHLCV[cache_key]["data"]
 
-    # Check symbol aliases
     if clean_sym in SYMBOL_ALIASES:
         ticker_str = SYMBOL_ALIASES[clean_sym]
     elif clean_sym == "PCI:AGROCHEMDOM" or clean_sym == "AGROCHEMDOM":
@@ -158,7 +158,7 @@ def get_ohlcv(symbol: str, tf: str = "1D"):
         ticker = yf.Ticker(ticker_str)
         df = ticker.history(period=period, interval=interval)
 
-        if df.empty:
+        if df.empty and not ticker_str.endswith(".BO"):
             ticker_str_bse = f"{clean_sym}.BO"
             ticker = yf.Ticker(ticker_str_bse)
             df = ticker.history(period=period, interval=interval)

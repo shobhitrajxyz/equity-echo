@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { StockSuggestion, Watchlist } from '../types/chart';
 import { Search, Loader2, ArrowRight, Plus, Check } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : '';
 
 interface SearchAutocompleteProps {
   onSelectStock: (symbol: string) => void;
@@ -44,10 +44,10 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
           setSelectedIndex(-1);
         })
         .catch(err => {
-          console.error('Search error:', err);
+          console.error('Search API error:', err);
           setIsLoading(false);
         });
-    }, 120);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [query]);
@@ -133,12 +133,12 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
 
           {suggestions.length === 0 && !isLoading ? (
             <div className="px-4 py-4 text-center text-xs text-slate-400">
-              No matching Indian stock for "<strong className="text-slate-200">{query}</strong>".
+              No matching stock index for "<strong className="text-slate-200">{query}</strong>".
               <button
-                onClick={() => handleSelect(`NSE:${query.toUpperCase()}`)}
-                className="mt-2 block w-full py-1.5 bg-emerald-600/20 text-emerald-400 rounded-md hover:bg-emerald-600/30 text-xs font-semibold"
+                onClick={() => handleSelect(`NSE:${query.toUpperCase().replace(/\s+/g, '')}`)}
+                className="mt-2 block w-full py-2 bg-emerald-600/20 text-emerald-400 rounded-md hover:bg-emerald-600/30 text-xs font-semibold transition-colors"
               >
-                Load symbol "NSE:{query.toUpperCase()}" directly
+                Load symbol "NSE:{query.toUpperCase().replace(/\s+/g, '')}" directly
               </button>
             </div>
           ) : (

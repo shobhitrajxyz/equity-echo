@@ -6,13 +6,13 @@ import { SidePanel } from './components/SidePanel';
 import { MOCK_STOCKS } from './data/mockData';
 import { ChartType, Timeframe, IndicatorConfig, DrawingToolType, StockData, DrawingItem, Watchlist } from './types/chart';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : '';
 
 const DEFAULT_WATCHLISTS: Watchlist[] = [
   {
     id: 'w1',
     name: 'Nifty 50 Top Stocks',
-    symbols: ['NSE:RELIANCE', 'NSE:TCS', 'NSE:INFY', 'NSE:HDFCBANK', 'NSE:ICICIBANK', 'NSE:SBIN', 'NSE:TATAMOTORS']
+    symbols: ['NSE:RELIANCE', 'NSE:TCS', 'NSE:INFY', 'NSE:HDFCBANK', 'NSE:ICICIBANK', 'NSE:SBIN', 'NSE:TATAMOTORS', 'NSE:ZOMATO']
   },
   {
     id: 'w2',
@@ -67,7 +67,7 @@ export function App() {
   const [drawings, setDrawings] = useState<DrawingItem[]>([]);
   const [hoverData, setHoverData] = useState<{ candle: any; ema20: number | null; sma50: number | null; rsi: number | null } | null>(null);
 
-  // Fetch real-time OHLCV data from API Backend
+  // Fetch real-time OHLCV data from API Backend for selected stock
   useEffect(() => {
     setIsLoading(true);
     fetch(`${API_BASE}/api/charts/ohlcv/${encodeURIComponent(selectedSymbol)}?tf=${timeframe}`)
@@ -102,6 +102,37 @@ export function App() {
         setIsLoading(false);
       });
   }, [selectedSymbol, timeframe]);
+
+  // Batch fetch live prices for all symbols in active watchlist
+  useEffect(() => {
+    const activeList = watchlists.find(w => w.id === activeWatchlistId);
+    if (!activeList) return;
+
+    activeList.symbols.forEach(sym => {
+      if (!allFetchedStocks[sym] || allFetchedStocks[sym].currentPrice === 100) {
+        fetch(`${API_BASE}/api/charts/ohlcv/${encodeURIComponent(sym)}?tf=1D`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.prices && data.prices.length > 0) {
+              const stockObj: StockData = {
+                symbol: data.symbol || sym,
+                name: data.name || sym,
+                currentPrice: data.currentPrice || data.prices[data.prices.length - 1].close,
+                change: data.change || 0,
+                changePercent: data.changePercent || 0,
+                high: data.high || data.prices[data.prices.length - 1].high,
+                low: data.low || data.prices[data.prices.length - 1].low,
+                volume: data.volume || data.prices[data.prices.length - 1].volume,
+                prices: data.prices,
+                events: data.events || []
+              };
+              setAllFetchedStocks(prev => ({ ...prev, [sym]: stockObj }));
+            }
+          })
+          .catch(() => {});
+      }
+    });
+  }, [activeWatchlistId, watchlists]);
 
   const handleCreateWatchlist = (name: string) => {
     const newList: Watchlist = {

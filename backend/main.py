@@ -22,26 +22,40 @@ CACHE_SEARCH: Dict[str, Dict[str, Any]] = {}
 CACHE_TTL = 300
 
 POPULAR_INDIAN_STOCKS = [
-    {"symbol": "NSE:RELIANCE", "ticker": "RELIANCE.NS", "name": "Reliance Industries Ltd", "exchange": "NSE", "sector": "Energy"},
-    {"symbol": "NSE:TCS", "ticker": "TCS.NS", "name": "Tata Consultancy Services", "exchange": "NSE", "sector": "IT"},
-    {"symbol": "NSE:INFY", "ticker": "INFY.NS", "name": "Infosys Ltd", "exchange": "NSE", "sector": "IT"},
-    {"symbol": "NSE:HDFCBANK", "ticker": "HDFCBANK.NS", "name": "HDFC Bank Ltd", "exchange": "NSE", "sector": "Banking"},
-    {"symbol": "NSE:ICICIBANK", "ticker": "ICICIBANK.NS", "name": "ICICI Bank Ltd", "exchange": "NSE", "sector": "Banking"},
-    {"symbol": "NSE:SBIN", "ticker": "SBIN.NS", "name": "State Bank of India", "exchange": "NSE", "sector": "Banking"},
-    {"symbol": "NSE:BHARTIARTL", "ticker": "BHARTIARTL.NS", "name": "Bharti Airtel Ltd", "exchange": "NSE", "sector": "Telecom"},
-    {"symbol": "NSE:ITC", "ticker": "ITC.NS", "name": "ITC Ltd", "exchange": "NSE", "sector": "FMCG"},
-    {"symbol": "NSE:TATAMOTORS", "ticker": "TATAMOTORS.NS", "name": "Tata Motors Ltd", "exchange": "NSE", "sector": "Auto"},
-    {"symbol": "NSE:TATASTEEL", "ticker": "TATASTEEL.NS", "name": "Tata Steel Ltd", "exchange": "NSE", "sector": "Metals"},
-    {"symbol": "NSE:ZOMATO", "ticker": "ZOMATO.NS", "name": "Eternal (Zomato) Ltd", "exchange": "NSE", "sector": "Consumer Services"},
-    {"symbol": "NSE:SUZLON", "ticker": "SUZLON.NS", "name": "Suzlon Energy Ltd", "exchange": "NSE", "sector": "Renewable Energy"},
-    {"symbol": "NSE:YESBANK", "ticker": "YESBANK.NS", "name": "Yes Bank Ltd", "exchange": "NSE", "sector": "Banking"},
-    {"symbol": "NSE:PCI:AGROCHEMDOM", "ticker": "AGROCHEM.NS", "name": "Agro Chem Domestic Custom Index", "exchange": "NSE", "sector": "Chemicals"},
-    {"symbol": "NSE:ADANIENT", "ticker": "ADANIENT.NS", "name": "Adani Enterprises Ltd", "exchange": "NSE", "sector": "Conglomerate"},
-    {"symbol": "NSE:WIPRO", "ticker": "WIPRO.NS", "name": "Wipro Ltd", "exchange": "NSE", "sector": "IT"},
-    {"symbol": "NSE:BAJFINANCE", "ticker": "BAJFINANCE.NS", "name": "Bajaj Finance Ltd", "exchange": "NSE", "sector": "Financials"},
-    {"symbol": "NSE:LT", "ticker": "LT.NS", "name": "Larsen & Toubro Ltd", "exchange": "NSE", "sector": "Infrastructure"},
-    {"symbol": "NSE:TITAN", "ticker": "TITAN.NS", "name": "Titan Company Ltd", "exchange": "NSE", "sector": "Consumer Goods"}
+    {"symbol": "NSE:RELIANCE", "ticker": "RELIANCE.NS", "name": "Reliance Industries Ltd", "exchange": "NSE", "sector": "Energy", "aliases": ["RELIANCE", "RIL"]},
+    {"symbol": "NSE:TCS", "ticker": "TCS.NS", "name": "Tata Consultancy Services", "exchange": "NSE", "sector": "IT", "aliases": ["TCS", "TATA"]},
+    {"symbol": "NSE:INFY", "ticker": "INFY.NS", "name": "Infosys Ltd", "exchange": "NSE", "sector": "IT", "aliases": ["INFY", "INFOSYS"]},
+    {"symbol": "NSE:HDFCBANK", "ticker": "HDFCBANK.NS", "name": "HDFC Bank Ltd", "exchange": "NSE", "sector": "Banking", "aliases": ["HDFC", "HDFCBANK"]},
+    {"symbol": "NSE:ICICIBANK", "ticker": "ICICIBANK.NS", "name": "ICICI Bank Ltd", "exchange": "NSE", "sector": "Banking", "aliases": ["ICICI", "ICICIBANK"]},
+    {"symbol": "NSE:SBIN", "ticker": "SBIN.NS", "name": "State Bank of India", "exchange": "NSE", "sector": "Banking", "aliases": ["SBI", "STATE BANK"]},
+    {"symbol": "NSE:BHARTIARTL", "ticker": "BHARTIARTL.NS", "name": "Bharti Airtel Ltd", "exchange": "NSE", "sector": "Telecom", "aliases": ["AIRTEL", "BHARTI"]},
+    {"symbol": "NSE:ITC", "ticker": "ITC.NS", "name": "ITC Ltd", "exchange": "NSE", "sector": "FMCG", "aliases": ["ITC"]},
+    {"symbol": "NSE:TATAMOTORS", "ticker": "TATAMOTORS.NS", "name": "Tata Motors Ltd", "exchange": "NSE", "sector": "Auto", "aliases": ["TATA MOTORS", "TMCV"]},
+    {"symbol": "NSE:TATASTEEL", "ticker": "TATASTEEL.NS", "name": "Tata Steel Ltd", "exchange": "NSE", "sector": "Metals", "aliases": ["TATA STEEL"]},
+    {"symbol": "NSE:ZOMATO", "ticker": "ZOMATO.NS", "name": "Eternal Ltd (Zomato)", "exchange": "NSE", "sector": "Consumer Services", "aliases": ["ETERNAL", "ZOMATO"]},
+    {"symbol": "NSE:SUZLON", "ticker": "SUZLON.NS", "name": "Suzlon Energy Ltd", "exchange": "NSE", "sector": "Renewable Energy", "aliases": ["SUZLON"]},
+    {"symbol": "NSE:YESBANK", "ticker": "YESBANK.NS", "name": "Yes Bank Ltd", "exchange": "NSE", "sector": "Banking", "aliases": ["YES", "YESBANK"]},
+    {"symbol": "NSE:PCI:AGROCHEMDOM", "ticker": "AGROCHEM.NS", "name": "Agro Chem Domestic Custom Index", "exchange": "NSE", "sector": "Chemicals", "aliases": ["AGRO", "PCI:AGROCHEMDOM"]},
+    {"symbol": "NSE:ADANIENT", "ticker": "ADANIENT.NS", "name": "Adani Enterprises Ltd", "exchange": "NSE", "sector": "Conglomerate", "aliases": ["ADANI", "ADANIENT"]},
+    {"symbol": "NSE:WIPRO", "ticker": "WIPRO.NS", "name": "Wipro Ltd", "exchange": "NSE", "sector": "IT", "aliases": ["WIPRO"]},
+    {"symbol": "NSE:BAJFINANCE", "ticker": "BAJFINANCE.NS", "name": "Bajaj Finance Ltd", "exchange": "NSE", "sector": "Financials", "aliases": ["BAJAJ", "BAJFINANCE"]},
+    {"symbol": "NSE:LT", "ticker": "LT.NS", "name": "Larsen & Toubro Ltd", "exchange": "NSE", "sector": "Infrastructure", "aliases": ["L&T", "LT"]},
+    {"symbol": "NSE:TITAN", "ticker": "TITAN.NS", "name": "Titan Company Ltd", "exchange": "NSE", "sector": "Consumer Goods", "aliases": ["TITAN"]},
+    {"symbol": "NSE:HAL", "ticker": "HAL.NS", "name": "Hindustan Aeronautics Ltd", "exchange": "NSE", "sector": "Defence", "aliases": ["HAL"]},
+    {"symbol": "NSE:BEL", "ticker": "BEL.NS", "name": "Bharat Electronics Ltd", "exchange": "NSE", "sector": "Defence", "aliases": ["BEL"]}
 ]
+
+SYMBOL_ALIASES = {
+    "ETERNAL": "ZOMATO.NS",
+    "NSE:ETERNAL": "ZOMATO.NS",
+    "ZOMATO": "ZOMATO.NS",
+    "RELIANCE": "RELIANCE.NS",
+    "TCS": "TCS.NS",
+    "INFY": "INFY.NS",
+    "HDFCBANK": "HDFCBANK.NS",
+    "ICICIBANK": "ICICIBANK.NS",
+    "SBIN": "SBIN.NS",
+}
 
 @app.get("/api/health")
 def health_check():
@@ -59,10 +73,12 @@ def search_stocks(q: str = Query("", min_length=1)):
     seen = set()
 
     for stock in POPULAR_INDIAN_STOCKS:
+        aliases = stock.get("aliases", [])
         if (query in stock["symbol"].upper() or 
             query in stock["ticker"].upper() or 
             query in stock["name"].upper() or 
-            query in stock["sector"].upper()):
+            query in stock["sector"].upper() or
+            any(query in a.upper() for a in aliases)):
             results.append({
                 "symbol": stock["symbol"],
                 "ticker": stock["ticker"],
@@ -110,14 +126,17 @@ def search_stocks(q: str = Query("", min_length=1)):
 
 @app.get("/api/charts/ohlcv/{symbol}")
 def get_ohlcv(symbol: str, tf: str = "1D"):
-    clean_sym = symbol.replace("NSE:", "").replace("BSE:", "").strip()
+    clean_sym = symbol.replace("NSE:", "").replace("BSE:", "").strip().upper()
     cache_key = f"{clean_sym}_{tf}"
     now = time.time()
 
     if cache_key in CACHE_OHLCV and (now - CACHE_OHLCV[cache_key]["timestamp"] < CACHE_TTL):
         return CACHE_OHLCV[cache_key]["data"]
 
-    if clean_sym == "PCI:AGROCHEMDOM" or clean_sym == "AGROCHEMDOM":
+    # Check symbol aliases
+    if clean_sym in SYMBOL_ALIASES:
+        ticker_str = SYMBOL_ALIASES[clean_sym]
+    elif clean_sym == "PCI:AGROCHEMDOM" or clean_sym == "AGROCHEMDOM":
         ticker_str = "AGROCHEM.NS"
     elif clean_sym.startswith("^"):
         ticker_str = clean_sym

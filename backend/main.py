@@ -5,7 +5,7 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import pandas as pd
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 app = FastAPI(title="Equity Echo Backend")
 
@@ -17,12 +17,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory fast cache to minimize latency
 CACHE_OHLCV: Dict[str, Dict[str, Any]] = {}
 CACHE_SEARCH: Dict[str, Dict[str, Any]] = {}
-CACHE_TTL = 300  # 5 minutes cache
+CACHE_TTL = 300
 
-# Curated list of top Indian NSE/BSE stocks for instant <5ms search
 POPULAR_INDIAN_STOCKS = [
     {"symbol": "NSE:RELIANCE", "ticker": "RELIANCE.NS", "name": "Reliance Industries Ltd", "exchange": "NSE", "sector": "Energy"},
     {"symbol": "NSE:TCS", "ticker": "TCS.NS", "name": "Tata Consultancy Services", "exchange": "NSE", "sector": "IT"},
@@ -42,12 +40,7 @@ POPULAR_INDIAN_STOCKS = [
     {"symbol": "NSE:WIPRO", "ticker": "WIPRO.NS", "name": "Wipro Ltd", "exchange": "NSE", "sector": "IT"},
     {"symbol": "NSE:BAJFINANCE", "ticker": "BAJFINANCE.NS", "name": "Bajaj Finance Ltd", "exchange": "NSE", "sector": "Financials"},
     {"symbol": "NSE:LT", "ticker": "LT.NS", "name": "Larsen & Toubro Ltd", "exchange": "NSE", "sector": "Infrastructure"},
-    {"symbol": "NSE:TITAN", "ticker": "TITAN.NS", "name": "Titan Company Ltd", "exchange": "NSE", "sector": "Consumer Goods"},
-    {"symbol": "BSE:500325", "ticker": "500325.BO", "name": "Reliance Industries Ltd (BSE)", "exchange": "BSE", "sector": "Energy"},
-    {"symbol": "NSE:HAL", "ticker": "HAL.NS", "name": "Hindustan Aeronautics Ltd", "exchange": "NSE", "sector": "Defence"},
-    {"symbol": "NSE:BEL", "ticker": "BEL.NS", "name": "Bharat Electronics Ltd", "exchange": "NSE", "sector": "Defence"},
-    {"symbol": "NSE:NIFTY50", "ticker": "^NSEI", "name": "Nifty 50 Index", "exchange": "NSE", "sector": "Index"},
-    {"symbol": "NSE:BANKNIFTY", "ticker": "^NSEBANK", "name": "Nifty Bank Index", "exchange": "NSE", "sector": "Index"}
+    {"symbol": "NSE:TITAN", "ticker": "TITAN.NS", "name": "Titan Company Ltd", "exchange": "NSE", "sector": "Consumer Goods"}
 ]
 
 @app.get("/api/health")
@@ -56,10 +49,6 @@ def health_check():
 
 @app.get("/api/search")
 def search_stocks(q: str = Query("", min_length=1)):
-    """
-    Fast Indian stock autocomplete search ONLY returning NSE & BSE stocks.
-    Uses ultra-fast caching to guarantee sub-50ms latency.
-    """
     query = q.strip().upper()
     now = time.time()
 
@@ -69,7 +58,6 @@ def search_stocks(q: str = Query("", min_length=1)):
     results = []
     seen = set()
 
-    # 1. Match local index (Instant < 5ms)
     for stock in POPULAR_INDIAN_STOCKS:
         if (query in stock["symbol"].upper() or 
             query in stock["ticker"].upper() or 
@@ -84,39 +72,33 @@ def search_stocks(q: str = Query("", min_length=1)):
             })
             seen.add(stock["ticker"])
 
-    # 2. Query Yahoo Search API ONLY for Indian Stock Exchanges (.NS / .BO)
     try:
         url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}&quotesCount=15&newsCount=0"
         headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
         resp = requests.get(url, headers=headers, timeout=1.5)
-        
         if resp.status_code == 200:
             data = resp.json()
             quotes = data.get("quotes", [])
             for item in quotes:
                 ticker = item.get("symbol", "")
                 exch_disp = item.get("exchDisp", "").upper()
-                
-                # STRICT FILTERING: Only include Indian stocks (.NS, .BO, NSE, BSE, ^NSE)
                 is_indian = (
                     ticker.endswith(".NS") or 
                     ticker.endswith(".BO") or 
                     exch_disp in ["NSE", "BSE", "NATIONAL STOCK EXCHANGE OF INDIA"] or 
                     ticker.startswith("^NSE")
                 )
-                
                 if is_indian and ticker not in seen:
                     exch = "NSE" if ticker.endswith(".NS") or "NSE" in exch_disp else "BSE"
                     clean_code = ticker.replace(".NS", "").replace(".BO", "")
                     disp_symbol = f"{exch}:{clean_code}"
                     name = item.get("longname") or item.get("shortname") or clean_code
-                    
                     results.append({
                         "symbol": disp_symbol,
                         "ticker": ticker,
                         "name": name,
                         "exchange": exch,
-                        "sector": item.get("sector", item.get("typeDisp", "Indian Equity"))
+                        "sector": item.get("sector", item.get("typeDisp", "Equity"))
                     })
                     seen.add(ticker)
     except Exception as e:
@@ -128,18 +110,13 @@ def search_stocks(q: str = Query("", min_length=1)):
 
 @app.get("/api/charts/ohlcv/{symbol}")
 def get_ohlcv(symbol: str, tf: str = "1D"):
-    """
-    Fetches OHLCV candlestick data for Indian stocks with fast caching layer to minimize latency.
-    """
     clean_sym = symbol.replace("NSE:", "").replace("BSE:", "").strip()
     cache_key = f"{clean_sym}_{tf}"
     now = time.time()
 
-    # Serve from in-memory cache if available and fresh (< 5 mins)
     if cache_key in CACHE_OHLCV and (now - CACHE_OHLCV[cache_key]["timestamp"] < CACHE_TTL):
         return CACHE_OHLCV[cache_key]["data"]
 
-    # Map to Yahoo Indian Ticker format
     if clean_sym == "PCI:AGROCHEMDOM" or clean_sym == "AGROCHEMDOM":
         ticker_str = "AGROCHEM.NS"
     elif clean_sym.startswith("^"):
@@ -163,7 +140,6 @@ def get_ohlcv(symbol: str, tf: str = "1D"):
         df = ticker.history(period=period, interval=interval)
 
         if df.empty:
-            # Fallback retry with BSE .BO ticker
             ticker_str_bse = f"{clean_sym}.BO"
             ticker = yf.Ticker(ticker_str_bse)
             df = ticker.history(period=period, interval=interval)
@@ -198,7 +174,7 @@ def get_ohlcv(symbol: str, tf: str = "1D"):
                     if split > 0:
                         events.append({"date": d_str, "type": "Split", "label": f"S: 1:{int(split)}", "color": "#2563eb"})
         except Exception as e:
-            print(f"Corporate actions error: {e}")
+            print(f"Events error: {e}")
 
         last_price = prices[-1]["close"] if prices else 0.0
         prev_price = prices[-2]["close"] if len(prices) > 1 else last_price
@@ -224,7 +200,6 @@ def get_ohlcv(symbol: str, tf: str = "1D"):
             "events": events
         }
 
-        # Cache response
         CACHE_OHLCV[cache_key] = {"timestamp": now, "data": result_data}
         return result_data
 
